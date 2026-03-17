@@ -1,0 +1,5 @@
+{
+  "name": "MailPulse Analytics",
+  "description": "Intelligent email volume analyzer. Paste your email logs or raw data, and let AI parse and visualize your message frequency over time.",
+  "requestFramePermissions": []
+}
