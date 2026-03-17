@@ -5,13 +5,39 @@ const getAiClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
-// Fetch real emails from our backend API
-export const fetchRealEmails = async (accounts: Account[], dateRange: DateRange): Promise<EmailRecord[]> => {
+// Detect whether we are running on a static host (GitHub Pages, no backend)
+const isStaticHost = (): boolean => {
+  const { hostname } = window.location;
+  return (
+    hostname.endsWith("github.io") ||
+    hostname.endsWith("netlify.app") ||
+    hostname.endsWith("vercel.app") ||
+    hostname === "localhost" // dev also has backend via server.ts — keep false for localhost
+      ? false
+      : !hostname.includes("localhost")
+  );
+};
+
+// Fetch real emails from our backend API (only when a backend is available)
+export const fetchRealEmails = async (
+  accounts: Account[],
+  dateRange: DateRange
+): Promise<EmailRecord[]> => {
+  // Skip the backend call entirely on static hosts — go straight to simulation
+  if (isStaticHost()) {
+    console.info("Static host detected — using Gemini simulation directly.");
+    return fetchSimulatedEmails(accounts, dateRange);
+  }
+
   try {
-    const response = await fetch('/api/fetch-emails', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accounts, startDate: dateRange.startDate, endDate: dateRange.endDate })
+    const response = await fetch("/api/fetch-emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        accounts,
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      }),
     });
 
     if (!response.ok) {
@@ -23,21 +49,23 @@ export const fetchRealEmails = async (accounts: Account[], dateRange: DateRange)
     return data.emails;
   } catch (error) {
     console.error("Real IMAP fetch failed, falling back to simulation", error);
-    // If real fetch fails, we fall back to simulation for demo purposes
     return fetchSimulatedEmails(accounts, dateRange);
   }
 };
 
-// Since we cannot actually access IMAP servers from a browser client without a backend proxy,
-// we use Gemini to simulate the "fetching" process and generate realistic data based on the accounts provided.
-export const fetchSimulatedEmails = async (accounts: Account[], dateRange: DateRange): Promise<EmailRecord[]> => {
+// Use Gemini to simulate realistic email data when no backend is available.
+export const fetchSimulatedEmails = async (
+  accounts: Account[],
+  dateRange: DateRange
+): Promise<EmailRecord[]> => {
   const ai = getAiClient();
-  // Using Pro for better reasoning on distribution and schema adherence
-  const model = "gemini-3-pro-preview"; 
+  // gemini-2.5-flash — fast, free-tier friendly, strong JSON output
+  const model = "gemini-2.5-flash";
 
-  const accountsList = accounts.map(a => `${a.email} (${a.provider})`).join(', ');
-  
-  // Dynamic volume calculation: Ensure we have enough data points per account to look realistic
+  const accountsList = accounts
+    .map((a) => `${a.email} (${a.provider})`)
+    .join(", ");
+
   const minEmails = Math.max(20, accounts.length * 10);
   const maxEmails = Math.max(80, accounts.length * 20);
 
@@ -56,12 +84,12 @@ export const fetchSimulatedEmails = async (accounts: Account[], dateRange: DateR
        - Approx 30-40% should be Promotional or Spam.
     4. DOMAIN-BASED RULES TEST (CRITICAL):
        - For @web.de recipients:
-         - Emails from senders containing "web.de" (e.g. "info@web.de", "team@web.de") should be in "Inbox" or "Allgemein".
+         - Emails from senders containing "web.de" (e.g. "info@web.de") should be in "Inbox" or "Allgemein".
          - Emails from other senders (e.g. "newsletter@shop.com") should be marked as "Spam" or "Junk".
        - For @gmx.net recipients:
-         - Emails from senders containing "gmx.net" (e.g. "service@gmx.net") should be in "Inbox".
+         - Emails from senders containing "gmx.net" should be in "Inbox".
          - Emails from other senders should be marked as "Spam".
-    5. Return ONLY the JSON array.
+    5. Return ONLY the JSON array, no markdown, no explanation.
 
     Output Schema:
     Array<{
@@ -88,39 +116,48 @@ export const fetchSimulatedEmails = async (accounts: Account[], dateRange: DateR
               sender: { type: Type.STRING },
               subject: { type: Type.STRING },
               recipient: { type: Type.STRING },
-              folder: { type: Type.STRING }
+              folder: { type: Type.STRING },
             },
-            required: ["date", "sender", "subject", "recipient", "folder"]
-          }
-        }
-      }
+            required: ["date", "sender", "subject", "recipient", "folder"],
+          },
+        },
+      },
     });
 
     let text = response.text;
     if (!text) return [];
 
-    // Clean up potential markdown code blocks
-    text = text.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
-    
+    // Strip any accidental markdown fences
+    text = text
+      .replace(/^```json\s*/, "")
+      .replace(/^```\s*/, "")
+      .replace(/```$/, "")
+      .trim();
+
     const parsed = JSON.parse(text);
     return parsed.map((item: any, index: number) => ({
       ...item,
-      id: `email-${Date.now()}-${index}`
+      id: `email-${Date.now()}-${index}`,
     }));
   } catch (error) {
     console.error("Failed to generate simulated email data", error);
-    throw new Error("Could not connect to mail servers. Please check credentials and try again.");
+    throw new Error(
+      "Could not connect to mail servers. Please check credentials and try again."
+    );
   }
 };
 
-export const generateAnalysisSummary = async (emails: EmailRecord[], startDate: string, endDate: string): Promise<string> => {
+export const generateAnalysisSummary = async (
+  emails: EmailRecord[],
+  startDate: string,
+  endDate: string
+): Promise<string> => {
   const ai = getAiClient();
-  const model = "gemini-3-flash-preview";
+  // gemini-2.0-flash — fastest, most free-tier friendly for short summaries
+  const model = "gemini-2.0-flash";
 
-  // Filter for context efficiency
-  const promoSpam = emails.filter(e => isPromoOrSpam(e));
-  
-  const emailContext = JSON.stringify(promoSpam.slice(0, 40)); 
+  const promoSpam = emails.filter((e) => isPromoOrSpam(e));
+  const emailContext = JSON.stringify(promoSpam.slice(0, 40));
 
   const prompt = `
     Analyze this list of Promotional and Spam emails received between ${startDate} and ${endDate}.
