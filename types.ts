@@ -36,12 +36,25 @@ export enum LoadingState {
 }
 
 // Helper to check if email is considered "Target" (Promo or Spam)
-export const isPromoOrSpam = (folder: string) => {
-  const f = folder.toLowerCase();
-  // EXPLICIT EXCLUSION: "Unbekannt" (Unknown) and "Allgemein" (General) are often Inbox-adjacent in Germany, not Spam.
-  if (f.includes('allgemein') || f.includes('unbekannt') || f.includes('posteingang')) return false;
+export const isPromoOrSpam = (email: EmailRecord) => {
+  const folder = email.folder.toLowerCase();
+  const sender = email.sender.toLowerCase();
+  const recipient = email.recipient.toLowerCase();
 
-  return f.includes('spam') || f.includes('junk') || f.includes('verdacht') || f.includes('pourriel') || f.includes('quarant') ||
-         f.includes('promotion') || f.includes('werbung') || f.includes('offer') || f.includes('newsletter') || f.includes('update') ||
-         f.includes('unerwünscht') || f.includes('abgelehnt');
+  // Rule for web.de domains: sender must have 'web.de' to be in inbox
+  if (recipient.endsWith('@web.de')) {
+    return !sender.includes('web.de');
+  }
+
+  // Rule for gmx.net domains: sender must have 'gmx.net' to be in inbox
+  if (recipient.endsWith('@gmx.net')) {
+    return !sender.includes('gmx.net');
+  }
+
+  // EXPLICIT EXCLUSION: "Unbekannt" (Unknown) and "Allgemein" (General) are often Inbox-adjacent in Germany, not Spam.
+  if (folder.includes('allgemein') || folder.includes('unbekannt') || folder.includes('posteingang')) return false;
+
+  return folder.includes('spam') || folder.includes('junk') || folder.includes('verdacht') || folder.includes('pourriel') || folder.includes('quarant') ||
+         folder.includes('promotion') || folder.includes('werbung') || folder.includes('offer') || folder.includes('newsletter') || folder.includes('update') ||
+         folder.includes('unerwünscht') || folder.includes('abgelehnt');
 };

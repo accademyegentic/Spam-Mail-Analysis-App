@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { EmailRecord, Account, DateRange } from "../types";
+import { EmailRecord, Account, DateRange, isPromoOrSpam } from "../types";
 
 const getAiClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -54,9 +54,13 @@ export const fetchSimulatedEmails = async (accounts: Account[], dateRange: DateR
        - Generate a mix of "Inbox", "Promotions", "Updates", and "Spam" folders.
        - Use diverse folder names: "Werbung", "Newsletter", "Junk", "Social", "Offers".
        - Approx 30-40% should be Promotional or Spam.
-    4. PROVIDER EXCLUSION TEST:
-       - Include some system emails from the provider itself (e.g. "team@web.de" sending to "user@web.de").
-       - These will be used to test the exclusion filter.
+    4. DOMAIN-BASED RULES TEST (CRITICAL):
+       - For @web.de recipients:
+         - Emails from senders containing "web.de" (e.g. "info@web.de", "team@web.de") should be in "Inbox" or "Allgemein".
+         - Emails from other senders (e.g. "newsletter@shop.com") should be marked as "Spam" or "Junk".
+       - For @gmx.net recipients:
+         - Emails from senders containing "gmx.net" (e.g. "service@gmx.net") should be in "Inbox".
+         - Emails from other senders should be marked as "Spam".
     5. Return ONLY the JSON array.
 
     Output Schema:
@@ -114,10 +118,7 @@ export const generateAnalysisSummary = async (emails: EmailRecord[], startDate: 
   const model = "gemini-3-flash-preview";
 
   // Filter for context efficiency
-  const promoSpam = emails.filter(e => {
-    const f = e.folder.toLowerCase();
-    return f.includes('spam') || f.includes('junk') || f.includes('promo') || f.includes('werbung');
-  });
+  const promoSpam = emails.filter(e => isPromoOrSpam(e));
   
   const emailContext = JSON.stringify(promoSpam.slice(0, 40)); 
 

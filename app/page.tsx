@@ -127,7 +127,7 @@ export default function Page() {
   const domainStatsArray = useMemo(() => {
     const domainStats = new Map<string, number>();
     filteredEmails.forEach(email => {
-      if (isPromoOrSpam(email.folder)) {
+      if (isPromoOrSpam(email)) {
         const domain = email.sender.includes('@') ? email.sender.split('@')[1].toLowerCase() : 'unknown';
         domainStats.set(domain, (domainStats.get(domain) || 0) + 1);
       }

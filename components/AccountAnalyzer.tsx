@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { EmailRecord } from '../types';
+import { EmailRecord, isPromoOrSpam } from '../types';
 import { ArrowLeft, ShieldAlert, Mail, Globe, Users, TrendingUp, Search, FolderOpen, PieChart } from 'lucide-react';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RePieChart, Pie, Cell as PieCell, Legend } from 'recharts';
 
@@ -9,12 +9,6 @@ interface AccountAnalyzerProps {
   data: EmailRecord[];
   onBack: () => void;
 }
-
-const isPromoOrSpam = (folder: string) => {
-  const f = folder.toLowerCase();
-  return f.includes('spam') || f.includes('junk') || f.includes('verdacht') || 
-         f.includes('promotion') || f.includes('werbung') || f.includes('offer') || f.includes('newsletter');
-};
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#3b82f6'];
 
@@ -34,7 +28,7 @@ export const AccountAnalyzer: React.FC<AccountAnalyzerProps> = ({ email, clientN
 
     data.forEach(e => {
       // Spam Count
-      if (isPromoOrSpam(e.folder)) spamCount++;
+      if (isPromoOrSpam(e)) spamCount++;
       
       // Sender Unique
       senders.add(e.sender);
@@ -268,7 +262,7 @@ export const AccountAnalyzer: React.FC<AccountAnalyzerProps> = ({ email, clientN
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredList.map(email => {
-                const isSpam = isPromoOrSpam(email.folder);
+                const isSpam = isPromoOrSpam(email);
                 return (
                   <tr key={email.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-3 whitespace-nowrap text-slate-500 font-mono text-xs">{email.date}</td>

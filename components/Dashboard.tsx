@@ -67,7 +67,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ filteredEmails, summary, l
     const stats = accountStats.get(email.recipient);
     if (stats) {
       stats.total++;
-      if (isPromoOrSpam(email.folder)) {
+      if (isPromoOrSpam(email)) {
         stats.promoSpam++;
       } else {
         stats.inbox++;
@@ -105,7 +105,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ filteredEmails, summary, l
             <h3 className="text-sm font-medium text-slate-500">Promo & Spam</h3>
           </div>
           <p className="text-2xl font-bold text-slate-800">
-            {filteredEmails.filter(e => isPromoOrSpam(e.folder)).length}
+            {filteredEmails.filter(e => isPromoOrSpam(e)).length}
           </p>
         </div>
 
@@ -242,7 +242,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ filteredEmails, summary, l
                       <span className="text-xs text-indigo-600 font-semibold uppercase tracking-wider">Total: {accountSpecificEmails.length}</span>
                     </div>
                     <div className="bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100">
-                      <span className="text-xs text-orange-600 font-semibold uppercase tracking-wider">Spam: {accountSpecificEmails.filter(e => isPromoOrSpam(e.folder)).length}</span>
+                      <span className="text-xs text-orange-600 font-semibold uppercase tracking-wider">Spam: {accountSpecificEmails.filter(e => isPromoOrSpam(e)).length}</span>
                     </div>
                   </div>
                   <div className="relative w-full sm:w-80">
@@ -269,7 +269,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ filteredEmails, summary, l
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {filteredAccountEmails.map(email => {
-                        const isSpam = isPromoOrSpam(email.folder);
+                        const isSpam = isPromoOrSpam(email);
                         return (
                           <tr key={email.id} className="hover:bg-slate-50 transition-colors">
                             <td className="px-4 py-3 whitespace-nowrap text-slate-500 font-mono text-xs">{email.date}</td>
