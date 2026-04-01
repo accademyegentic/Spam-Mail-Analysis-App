@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AccountInput } from '../components/AccountInput';
 import { DateFilter } from '../components/DateFilter';
 import { Dashboard } from '../components/Dashboard';
-import { fetchRealEmails, generateAnalysisSummary } from '../services/geminiService';
+import { fetchRealEmails, generateAnalysisSummary } from '../services/emailService';
 import { EmailRecord, DateRange, AnalysisSummary, LoadingState, Account, isPromoOrSpam } from '../types';
 import { Globe, Filter } from 'lucide-react';
 
@@ -151,29 +151,29 @@ export default function Page() {
 
         {/* Top Domains Sidebar Section */}
         {loadingState !== LoadingState.IDLE && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-            <div className="p-5 border-b border-slate-200 bg-slate-50/50">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-indigo-600" />
-                Top Domains (Promo/Spam)
-              </h3>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-2">
+              <div className="p-1.5 bg-orange-100 rounded-lg">
+                <Globe className="w-3.5 h-3.5 text-orange-600" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-800">Top Spam Domains</h3>
             </div>
             <div className="p-5">
                {domainStatsArray.length > 0 ? (
-                 <div className="space-y-4">
+                 <div className="space-y-3.5">
                    {domainStatsArray.map((item, idx) => (
                      <div key={idx} className="flex items-center gap-3">
-                       <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-[9px] font-bold text-slate-500 border border-slate-200">
+                       <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-[9px] font-extrabold text-slate-500 border border-slate-200 flex-shrink-0">
                           {idx + 1}
                        </div>
                        <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-medium text-slate-700 truncate pr-2">{item.domain}</span>
-                            <span className="text-[10px] font-bold text-orange-600">{item.count}</span>
+                            <span className="text-xs font-semibold text-slate-700 truncate pr-2">{item.domain}</span>
+                            <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md">{item.count}</span>
                           </div>
-                          <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
-                            <div 
-                              className="bg-indigo-500 h-full rounded-full" 
+                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-orange-400 to-red-400 h-full rounded-full transition-all"
                               style={{ width: `${(item.count / domainStatsArray[0].count) * 100}%` }}
                             />
                           </div>
@@ -184,7 +184,7 @@ export default function Page() {
                ) : (
                  <div className="text-center text-slate-400 py-8 text-xs flex flex-col items-center gap-2">
                    <Filter className="w-6 h-6 opacity-20" />
-                   No data available.
+                   <span>No domain data yet.</span>
                  </div>
                )}
             </div>

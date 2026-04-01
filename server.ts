@@ -104,6 +104,86 @@ async function startServer() {
     res.json({ emails: allEmails, errors });
   });
 
+  // Mark emails as read via IMAP
+  app.post("/api/mark-read", async (req, res) => {
+    const { accounts, toMark } = req.body;
+    // toMark: Array<{ emailId: string, folder: string, recipient: string }>
+
+    if (!accounts || !Array.isArray(toMark) || toMark.length === 0) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+
+    // Group items by recipient
+    const byRecipient = new Map<string, { folder: string; uid: number }[]>();
+    for (const item of toMark) {
+      // Email IDs from IMAP have format: "imap-{uid}-{timestamp}-{random}"
+      const parts = String(item.emailId).split("-");
+      if (parts[0] !== "imap") continue;
+      const uid = parseInt(parts[1], 10);
+      if (isNaN(uid)) continue;
+      if (!byRecipient.has(item.recipient)) byRecipient.set(item.recipient, []);
+      byRecipient.get(item.recipient)!.push({ folder: item.folder, uid });
+    }
+
+    let success = 0;
+    let failed = 0;
+
+    for (const [recipient, items] of byRecipient.entries()) {
+      const account = accounts.find((a: any) => a.email === recipient);
+      if (!account?.password) { failed += items.length; continue; }
+
+      const client = new ImapFlow({
+        host: getImapHost(account.email),
+        port: 993,
+        secure: true,
+        auth: { user: account.email, pass: account.password },
+        logger: false,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+      });
+
+      try {
+        await client.connect();
+        const mailboxes = await client.list();
+
+        // Group by folder name
+        const byFolder = new Map<string, number[]>();
+        for (const item of items) {
+          if (!byFolder.has(item.folder)) byFolder.set(item.folder, []);
+          byFolder.get(item.folder)!.push(item.uid);
+        }
+
+        for (const [folderName, uids] of byFolder.entries()) {
+          // Find the actual mailbox path matching the stored folder name
+          const mailbox = mailboxes.find(
+            (f) =>
+              f.name.toLowerCase() === folderName.toLowerCase() ||
+              f.path.toLowerCase() === folderName.toLowerCase()
+          );
+          const folderPath = mailbox?.path ?? folderName;
+
+          let lock = await client.getMailboxLock(folderPath);
+          try {
+            await (client as any).messageFlagsAdd(uids, ["\\Seen"], { uid: true });
+            success += uids.length;
+          } catch (err) {
+            console.error(`Error marking folder ${folderPath}:`, err);
+            failed += uids.length;
+          } finally {
+            lock.release();
+          }
+        }
+
+        await client.logout();
+      } catch (err: any) {
+        console.error(`Failed to connect for ${recipient}:`, err);
+        failed += items.length;
+      }
+    }
+
+    res.json({ success, failed });
+  });
+
   // Helper to guess IMAP host
   function getImapHost(email: string) {
     const domain = email.split('@')[1].toLowerCase();

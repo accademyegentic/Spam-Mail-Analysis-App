@@ -1,4 +1,4 @@
-name: Build and Deploy to gh-pages Branch
+name: Build and Deploy — MailPulse Analytics v2
 
 on:
   push:
@@ -28,7 +28,9 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Sets the Vite base path to /<repo-name>/ so all assets resolve
+          # correctly when hosted on GitHub Pages (username.github.io/<repo>/)
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
 
       - name: Add .nojekyll to disable Jekyll processing
         run: touch ./dist/.nojekyll

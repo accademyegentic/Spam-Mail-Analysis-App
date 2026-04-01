@@ -362,33 +362,37 @@ export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUploa
   if (!loaded) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-          <Server className="w-5 h-5 text-indigo-600" />
-          Account & Data Input
-        </h2>
-        <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border ${dataMode ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-amber-600 bg-amber-50 border-amber-100'}`}>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-indigo-100 rounded-lg">
+            <Server className="w-3.5 h-3.5 text-indigo-600" />
+          </div>
+          <h2 className="text-sm font-bold text-slate-800">Account & Data Input</h2>
+        </div>
+        <div className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${dataMode ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'}`}>
           {dataMode ? <FileText className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
-          <span>{dataMode ? 'Data Source: Uploaded Log' : 'Mode: Live IMAP (TLS)'}</span>
+          <span>{dataMode ? 'Uploaded Log' : 'Live IMAP / TLS'}</span>
         </div>
       </div>
 
-      <p className="text-sm text-slate-500 mb-6">
-        Add email accounts to fetch via IMAP over TLS (port 993), <strong>OR</strong> upload a file (Excel/CSV).
-        <br /><span className="text-xs text-slate-400">Supported: 1) Log files (Date, Subject, Sender) or 2) Account Lists (Email, Password)</span>
+      <div className="px-6 pt-4 pb-2">
+      <p className="text-xs text-slate-500">
+        Add email accounts to fetch via IMAP over TLS (port 993), <strong>or</strong> upload a file (Excel/CSV).
+        <span className="block text-slate-400 mt-0.5">Supported: Log files (Date, Subject, Sender) or Account Lists (Email, Password)</span>
       </p>
+      </div>
 
       {importStatus && (
-        <div className={`mb-4 px-4 py-3 rounded-lg flex flex-col gap-1 text-sm ${
-          importStatus.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'
+        <div className={`mx-6 mb-4 px-4 py-3 rounded-xl flex flex-col gap-1 text-sm ${
+          importStatus.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
         }`}>
-          <div className="flex items-center gap-2 font-medium">
-            {importStatus.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+          <div className="flex items-center gap-2 font-semibold text-xs">
+            {importStatus.type === 'success' ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
             {importStatus.message}
           </div>
           {importStatus.detail && (
-            <div className="pl-6 text-xs opacity-90 flex items-center gap-1">
+            <div className="pl-5 text-xs opacity-80 flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {importStatus.detail}
             </div>
@@ -396,64 +400,64 @@ export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUploa
         </div>
       )}
 
-      <div className="overflow-hidden border border-slate-200 rounded-lg mb-6">
+      <div className="mx-6 mb-5 overflow-hidden border border-slate-200 rounded-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left min-w-[600px]">
-            <thead className="bg-slate-50 text-slate-600 font-medium border-b border-slate-200">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-4 py-3 w-[150px]">Client</th>
-                <th className="px-4 py-3 min-w-[200px]">Email Address</th>
-                <th className="px-4 py-3 w-[180px]">Password / Token</th>
-                <th className="px-4 py-3 w-[150px]">Provider</th>
-                <th className="px-4 py-3 w-[60px] text-center">Action</th>
+                <th className="px-4 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[150px]">Client</th>
+                <th className="px-4 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wider min-w-[200px]">Email Address</th>
+                <th className="px-4 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[180px]">Password / Token</th>
+                <th className="px-4 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wider w-[150px]">Provider</th>
+                <th className="px-4 py-2.5 w-[60px] text-center"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {accounts.map((account, index) => (
-                <tr key={account.id} className="hover:bg-slate-50/50">
-                  <td className="px-4 py-2">
+            <tbody className="divide-y divide-slate-50">
+              {accounts.map((account) => (
+                <tr key={account.id} className="hover:bg-slate-50/60 transition-colors group">
+                  <td className="px-4 py-2.5">
                     <input
                       type="text"
                       placeholder="Client Name"
                       value={account.client || ''}
                       onChange={(e) => updateAccount(account.id, 'client', e.target.value)}
                       disabled={isProcessing || dataMode}
-                      className="w-full bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 disabled:text-slate-500 font-medium"
+                      className="w-full bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-300 disabled:text-slate-400 font-semibold text-sm outline-none"
                     />
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2.5">
                     <input
                       type="email"
                       placeholder="user@example.com"
                       value={account.email}
                       onChange={(e) => updateAccount(account.id, 'email', e.target.value)}
                       disabled={isProcessing || dataMode}
-                      className="w-full bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 disabled:text-slate-500"
+                      className="w-full bg-transparent border-none focus:ring-0 text-slate-700 placeholder:text-slate-300 disabled:text-slate-400 text-sm outline-none"
                     />
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2.5">
                     <input
                       type="password"
                       placeholder={dataMode ? "Data Loaded" : "••••••••••••"}
                       value={account.password}
                       onChange={(e) => updateAccount(account.id, 'password', e.target.value)}
                       disabled={isProcessing || dataMode}
-                      className="w-full bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 disabled:text-slate-400"
+                      className="w-full bg-transparent border-none focus:ring-0 text-slate-700 placeholder:text-slate-300 disabled:text-slate-400 text-sm outline-none"
                     />
                   </td>
-                  <td className="px-4 py-2 text-slate-500">
-                    <div className="flex items-center gap-2">
+                  <td className="px-4 py-2.5 text-slate-500">
+                    <div className="flex items-center gap-1.5">
                       {account.provider !== 'Unknown' && <Globe className="w-3 h-3 text-indigo-400 flex-shrink-0" />}
-                      <span className="truncate">{account.provider}</span>
+                      <span className="truncate text-xs font-medium">{account.provider}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-2 text-center">
+                  <td className="px-4 py-2.5 text-center">
                     <button
                       onClick={() => removeRow(account.id)}
                       disabled={accounts.length === 1 || isProcessing || dataMode}
-                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-30"
+                      className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-20 opacity-0 group-hover:opacity-100"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </td>
                 </tr>
@@ -461,56 +465,56 @@ export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUploa
             </tbody>
           </table>
         </div>
-        <div className="bg-slate-50 px-4 py-2 border-t border-slate-200 flex items-center justify-between">
+        <div className="bg-slate-50/80 px-4 py-2.5 border-t border-slate-100 flex items-center justify-between">
           <button
             onClick={addRow}
             disabled={isProcessing || dataMode}
-            className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-40 transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            Add Another Account
+            <Plus className="w-3.5 h-3.5" />
+            Add Account
           </button>
-
           <div className="flex items-center">
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept=".xlsx,.xls,.csv"
-              onChange={handleFileUpload}
-            />
+            <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
             <button
               onClick={handleImportClick}
               disabled={isProcessing}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 disabled:opacity-50 hover:underline"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 disabled:opacity-40 transition-colors"
             >
-              <Upload className="w-4 h-4" />
-              Import Data (Excel/CSV)
+              <Upload className="w-3.5 h-3.5" />
+              Import Excel/CSV
             </button>
           </div>
         </div>
       </div>
 
       {isProcessing && (
-        <div className="mb-6 bg-slate-900 rounded-lg p-4 font-mono text-xs text-green-400 h-32 overflow-y-auto">
+        <div className="mx-6 mb-5 bg-slate-950 rounded-xl p-4 font-mono text-xs text-emerald-400 h-32 overflow-y-auto border border-slate-800 shadow-inner">
+          <div className="text-slate-500 text-[10px] uppercase tracking-widest mb-2 font-semibold">// IMAP Connection Log</div>
           {logs.map((log, i) => (
-            <div key={i} className="mb-1">&gt; {log}</div>
+            <div key={i} className="mb-0.5 flex items-start gap-1.5">
+              <span className="text-indigo-500 flex-shrink-0">›</span>
+              <span>{log}</span>
+            </div>
           ))}
-          <div className="animate-pulse">&gt; _</div>
+          <div className="flex items-center gap-1 mt-0.5">
+            <span className="text-indigo-500">›</span>
+            <span className="inline-block w-1.5 h-3.5 bg-emerald-400 animate-pulse" />
+          </div>
         </div>
       )}
 
-      <div className="flex justify-between items-center gap-3">
-        <div className="text-xs text-slate-400 flex items-center gap-1">
+      <div className="px-6 pb-5 flex justify-between items-center gap-3">
+        <div className="text-[11px] text-slate-400 flex items-center gap-1">
           <Save className="w-3 h-3" />
-          <span>Auto-saved locally (passwords excluded)</span>
+          <span>Auto-saved (passwords excluded)</span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {loadingState === LoadingState.ERROR && (
-            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-              <AlertCircle className="w-4 h-4" />
-              <span>Connection failed. Please check credentials.</span>
+            <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Connection failed. Check credentials.</span>
             </div>
           )}
 
@@ -518,16 +522,16 @@ export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUploa
             onClick={() => onFetch(accounts)}
             disabled={!isValid || isProcessing || dataMode}
             className={`
-              flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium text-white transition-all
+              flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all
               ${!isValid || isProcessing || dataMode
-                ? 'bg-slate-300 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transform active:scale-95'}
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                : 'bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 shadow-md hover:shadow-indigo-200 hover:shadow-lg active:scale-95'}
             `}
           >
             {isProcessing ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Connecting via TLS...
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Connecting...
               </>
             ) : dataMode ? (
               <>

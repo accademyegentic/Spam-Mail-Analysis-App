@@ -1,5 +1,6 @@
 {
   "name": "MailPulse Analytics",
-  "description": "Intelligent email volume analyzer. Paste your email logs or raw data, and let AI parse and visualize your message frequency over time.",
+  "version": "2.0.0",
+  "description": "Email volume analyzer — import logs or connect via IMAP to visualize message frequency, detect promo/spam patterns, and mark emails as read across multiple accounts.",
   "requestFramePermissions": []
 }

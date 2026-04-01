@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AccountInput } from './components/AccountInput';
 import { DateFilter } from './components/DateFilter';
 import { Dashboard } from './components/Dashboard';
-import { fetchRealEmails, generateAnalysisSummary } from './services/geminiService';
+import { fetchRealEmails, generateAnalysisSummary } from './services/emailService';
 import { EmailRecord, DateRange, AnalysisSummary, LoadingState, Account } from './types';
 import { LayoutDashboard } from 'lucide-react';
 
@@ -132,7 +132,7 @@ const App: React.FC = () => {
             </h1>
           </div>
           <div className="text-sm text-slate-500">
-             Powered by Gemini 3
+             Local Analysis Engine
           </div>
         </div>
       </header>
