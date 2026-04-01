@@ -104,6 +104,11 @@ async function startServer() {
     res.json({ emails: allEmails, errors });
   });
 
+  // Health check — lets the frontend detect whether the backend is running
+  app.get("/api/health", (_req, res) => {
+    res.json({ ok: true, version: "2.0.0" });
+  });
+
   // Mark emails as read via IMAP
   app.post("/api/mark-read", async (req, res) => {
     const { accounts, toMark } = req.body;

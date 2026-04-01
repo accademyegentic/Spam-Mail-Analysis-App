@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AccountInput } from '../components/AccountInput';
 import { DateFilter } from '../components/DateFilter';
 import { Dashboard } from '../components/Dashboard';
-import { fetchRealEmails, generateAnalysisSummary } from '../services/emailService';
+import { fetchRealEmails, generateAnalysisSummary, checkBackend } from '../services/emailService';
 import { EmailRecord, DateRange, AnalysisSummary, LoadingState, Account, isPromoOrSpam } from '../types';
 import { Globe, Filter } from 'lucide-react';
 
@@ -20,6 +20,12 @@ export default function Page() {
   
   const [summary, setSummary] = useState<AnalysisSummary | null>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.IDLE);
+  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null);
+
+  // Probe the backend once on mount so the UI can adapt to static deployments
+  useEffect(() => {
+    checkBackend().then(setBackendAvailable);
+  }, []);
 
   const handleFetch = async (accountList: Account[]) => {
     setLoadingState(LoadingState.PARSING);
@@ -142,10 +148,11 @@ export default function Page() {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Left Column: Input & Controls */}
       <div className="lg:col-span-4 space-y-6">
-        <AccountInput 
-          onFetch={handleFetch} 
+        <AccountInput
+          onFetch={handleFetch}
           onDataUpload={handleDataUpload}
-          loadingState={loadingState} 
+          loadingState={loadingState}
+          backendAvailable={backendAvailable}
         />
         <DateFilter dateRange={dateRange} onDateChange={setDateRange} />
 

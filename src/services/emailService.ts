@@ -1,5 +1,16 @@
 import { EmailRecord, Account, DateRange, isPromoOrSpam } from "../types";
 
+// Probe whether the Express backend is reachable.
+// Returns false on GitHub Pages or any static-only deployment.
+export const checkBackend = async (): Promise<boolean> => {
+  try {
+    const res = await fetch("/api/health", { method: "GET" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+};
+
 // Fetch real emails from our backend API (IMAP over TLS)
 export const fetchRealEmails = async (
   accounts: Account[],

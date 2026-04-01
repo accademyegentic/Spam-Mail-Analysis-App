@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Account, LoadingState, EmailRecord, DateRange } from '../types';
-import { Plus, Trash2, Shield, Globe, Server, Play, AlertCircle, Save, Upload, FileText, CheckCircle, XCircle, KeyRound, Calendar } from 'lucide-react';
+import { Plus, Trash2, Shield, Globe, Server, Play, AlertCircle, Save, Upload, FileText, CheckCircle, XCircle, KeyRound, Calendar, WifiOff, Info } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface AccountInputProps {
   onFetch: (accounts: Account[]) => void;
   onDataUpload: (emails: EmailRecord[], accounts: Account[], detectedRange?: DateRange) => void;
   loadingState: LoadingState;
+  backendAvailable: boolean | null; // null = still probing
 }
 
 const PROVIDERS: Record<string, string> = {
@@ -96,7 +97,7 @@ const parseExcelDate = (value: any): string => {
   }
 };
 
-export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUpload, loadingState }) => {
+export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUpload, loadingState, backendAvailable }) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -377,11 +378,27 @@ export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUploa
       </div>
 
       <div className="px-6 pt-4 pb-2">
-      <p className="text-xs text-slate-500">
-        Add email accounts to fetch via IMAP over TLS (port 993), <strong>or</strong> upload a file (Excel/CSV).
-        <span className="block text-slate-400 mt-0.5">Supported: Log files (Date, Subject, Sender) or Account Lists (Email, Password)</span>
-      </p>
+        <p className="text-xs text-slate-500">
+          Add email accounts to fetch via IMAP over TLS (port 993), <strong>or</strong> upload a file (Excel/CSV).
+          <span className="block text-slate-400 mt-0.5">Supported: Log files (Date, Subject, Sender) or Account Lists (Email, Password)</span>
+        </p>
       </div>
+
+      {/* Backend availability notice */}
+      {backendAvailable === false && (
+        <div className="mx-6 mb-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+          <div className="flex items-start gap-2">
+            <WifiOff className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-bold text-amber-800 mb-0.5">IMAP backend not available</p>
+              <p className="text-xs text-amber-700 leading-relaxed">
+                This deployment is static-only (GitHub Pages). Live IMAP fetching requires the backend server,
+                which only runs locally. <strong>Use the file import (Excel/CSV) instead.</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {importStatus && (
         <div className={`mx-6 mb-4 px-4 py-3 rounded-xl flex flex-col gap-1 text-sm ${
@@ -514,16 +531,21 @@ export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUploa
           {loadingState === LoadingState.ERROR && (
             <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>Connection failed. Check credentials.</span>
+              <span>
+                {backendAvailable === false
+                  ? 'Backend unavailable — use file import.'
+                  : 'IMAP failed. Check credentials & provider settings.'}
+              </span>
             </div>
           )}
 
           <button
             onClick={() => onFetch(accounts)}
-            disabled={!isValid || isProcessing || dataMode}
+            disabled={!isValid || isProcessing || dataMode || backendAvailable === false}
+            title={backendAvailable === false ? 'IMAP requires the local backend server — not available on this deployment' : undefined}
             className={`
               flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all
-              ${!isValid || isProcessing || dataMode
+              ${!isValid || isProcessing || dataMode || backendAvailable === false
                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 : 'bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 shadow-md hover:shadow-indigo-200 hover:shadow-lg active:scale-95'}
             `}
@@ -537,6 +559,11 @@ export const AccountInput: React.FC<AccountInputProps> = ({ onFetch, onDataUploa
               <>
                 <FileText className="w-4 h-4" />
                 Data Loaded
+              </>
+            ) : backendAvailable === false ? (
+              <>
+                <WifiOff className="w-4 h-4" />
+                IMAP Unavailable
               </>
             ) : (
               <>
